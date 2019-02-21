@@ -10,11 +10,14 @@ from flask_session import Session
 
 import logging
 from config import Config, config_dict
+from info.modules.index import index_blu
 
 
 def create_app(env):  #env 是用来接收"develop"或者"product"
 
     app = Flask(__name__)
+
+    app.register_blueprint(index_blu)
     app.secret_key = "!@#$%^%$#$%^&%$"
 
 
