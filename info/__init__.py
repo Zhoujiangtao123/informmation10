@@ -11,12 +11,13 @@ from flask_session import Session
 import logging
 from config import Config, config_dict
 from info.modules.index import index_blu
+db = SQLAlchemy()  #解决db导入问题，先不填里面的参数app，没有填的话就是空，是空的话就得手动执行源代码。正常情况里面填了参数app，所有是自动执行源代码db.init_app(app)
 
 
 def create_app(env):  #env 是用来接收"develop"或者"product"
-
     app = Flask(__name__)
 
+    # 将蓝图对象注册到app
     app.register_blueprint(index_blu)
     app.secret_key = "!@#$%^%$#$%^&%$"
 
@@ -33,7 +34,9 @@ def create_app(env):  #env 是用来接收"develop"或者"product"
 
 
     # 创建数据库对象
-    db = SQLAlchemy(app)
+    # db = SQLAlchemy(app) 相当于 # db = SQLAlchemy()，db.init_app(app)
+
+    db.init_app(app)
 
     # 创建redis仓库
     redis_store = redis.StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT)
