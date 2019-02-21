@@ -7,18 +7,22 @@ import redis
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
-from flask import session
-
-from config import Config
 
 
-def create_app():
+from config import Config, config_dict
+
+
+def create_app(env):  #env 是用来接收"develop"或者"product"
+
     app = Flask(__name__)
     app.secret_key = "!@#$%^%$#$%^&%$"
 
 
     # 注意要放在创建数据库对象之前，需要先加载配置信息，才能创建数据库对象
-    app.config.from_object(Config)
+    # 现在解决不同环境的问题？,是通过配置类去加载的，不同的环境就需要加载不同的配置类信息
+
+    config_classname = config_dict[env]  #是DevelopmentConfig或者ProductionConfig
+    app.config.from_object(config_classname)
 
     # 创建数据库对象
     db = SQLAlchemy(app)
