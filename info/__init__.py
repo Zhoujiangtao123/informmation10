@@ -1,6 +1,7 @@
 """
 将所有业务逻辑代码放到info这个init文件中时候，需要解决主文件的app这对象的问题？ 利用函数返回值
 """
+
 from logging.handlers import RotatingFileHandler
 
 import redis
@@ -10,23 +11,23 @@ from flask_session import Session
 
 import logging
 from config import Config, config_dict
-from info.modules.index import index_blu
+
+
+
 db = SQLAlchemy()  #解决db导入问题，先不填里面的参数app，没有填的话就是空，是空的话就得手动执行源代码。正常情况里面填了参数app，所有是自动执行源代码db.init_app(app)
+
+redis_store = None #这是解决redis导入问题
 
 
 def create_app(env):  #env 是用来接收"develop"或者"product"
     app = Flask(__name__)
 
-    # 将蓝图对象注册到app
-    app.register_blueprint(index_blu)
-    app.secret_key = "!@#$%^%$#$%^&%$"
-
 
     # 注意要放在创建数据库对象之前，需要先加载配置信息，才能创建数据库对象
     # 现在解决不同环境的问题？,是通过配置类去加载的，不同的环境就需要加载不同的配置类信息
-
-    config_classname = config_dict[env]  #是DevelopmentConfig或者ProductionConfig
+    config_classname = config_dict[env]  # 是DevelopmentConfig或者ProductionConfig
     app.config.from_object(config_classname)
+
 
     # log_file(类名.LOG_LV)  #结果就是logging.DEBUG或者logging.ERROR
     # 两种不同环境的不同日志等级，开发模式就是logging.DEBUG等级 线上模式就是logging.ERROR等级
@@ -35,15 +36,19 @@ def create_app(env):  #env 是用来接收"develop"或者"product"
 
     # 创建数据库对象
     # db = SQLAlchemy(app) 相当于 # db = SQLAlchemy()，db.init_app(app)
-
     db.init_app(app)
-
-    # 创建redis仓库
-    redis_store = redis.StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT)
 
     # 读取app中的session信息， 指定存储位置
     Session(app)
 
+    # 创建redis仓库
+    global redis_store
+    redis_store = redis.StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT)
+
+    # 把注册对象的导入放在注册对象旁边
+    from info.modules.index import index_blu  # 解决redis循环导入的问题
+    # 将蓝图对象注册到app
+    app.register_blueprint(index_blu)
     return app
 
 
